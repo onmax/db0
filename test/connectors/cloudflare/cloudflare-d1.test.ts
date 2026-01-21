@@ -25,6 +25,7 @@ describe("connectors: cloudflare-d1", () => {
     connector: cloudflareD1({
       bindingName: "test",
     }),
+    skipTransactions: true, // D1 uses batch API for transactions, not raw BEGIN/COMMIT
   });
 
   describe("eager initialization", () => {
