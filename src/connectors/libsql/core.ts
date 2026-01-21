@@ -17,7 +17,7 @@ export default function libSqlCoreConnector(
   return {
     name: opts.name || "libsql-core",
     dialect: "libsql",
-    getInstance: async () => opts.getClient(),
+    getInstance: () => opts.getClient(),
     exec: (sql) => query(sql),
     prepare: (sql) => new StatementWrapper(sql, query),
     dispose: () => {
@@ -50,6 +50,7 @@ class StatementWrapper extends BoundableStatement<void> {
       args: params as Exclude<Primitive, undefined>[],
     });
     return {
+      success: true,
       ...res,
     };
   }
