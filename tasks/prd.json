@@ -1,0 +1,333 @@
+{
+  "name": "db0 Multi-Dialect Migration",
+  "branchName": "feat/multi-dialect",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Multi-dialect Drizzle integration",
+      "description": "As a developer using db0 with Drizzle, I want to use any supported dialect (sqlite, postgresql, mysql) so that I can use db0's connection management with Drizzle ORM",
+      "acceptanceCriteria": [
+        "db0/integrations/drizzle works with all dialects",
+        "Type inference works correctly per dialect",
+        "drizzle(db, { schema }) returns correctly typed Drizzle instance"
+      ],
+      "priority": 1,
+      "passes": true,
+      "dependsOn": [],
+      "labels": [
+        "drizzle",
+        "core"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-002",
+      "title": "Eager initialization option",
+      "description": "As a developer, I want optional eager initialization so that getInstance() can be sync when the connector supports it",
+      "acceptanceCriteria": [
+        "New option: { eager: true } in connector config",
+        "When eager + sync connector (better-sqlite3): getInstance() is sync",
+        "When eager + async connector: connection established at creation, getInstance() still sync after init",
+        "Backward compatible: default behavior unchanged"
+      ],
+      "priority": 2,
+      "passes": false,
+      "dependsOn": [],
+      "labels": [
+        "api",
+        "core"
+      ]
+    },
+    {
+      "id": "US-003",
+      "title": "Consistent connector API",
+      "description": "As a developer, I want all connectors to have consistent behavior so that switching dialects requires minimal code changes",
+      "acceptanceCriteria": [
+        "All connectors expose dialect property",
+        "getInstance() typing is consistent (Promise-wrapped unless eager+sync)",
+        "Common error handling patterns"
+      ],
+      "priority": 2,
+      "passes": false,
+      "dependsOn": [],
+      "labels": [
+        "connectors",
+        "api"
+      ]
+    },
+    {
+      "id": "US-004",
+      "title": "Real database testing with Docker",
+      "description": "As a contributor, I want integration tests with real databases so that we catch dialect-specific issues",
+      "acceptanceCriteria": [
+        "Docker Compose for postgres + mysql",
+        "CI runs tests against real databases",
+        "Tests cover: basic CRUD, transactions, prepared statements, edge cases per dialect"
+      ],
+      "priority": 3,
+      "passes": false,
+      "dependsOn": [],
+      "labels": [
+        "testing",
+        "ci"
+      ]
+    },
+    {
+      "id": "US-005",
+      "title": "Raw driver access for ORM composition",
+      "description": "As a developer using other ORMs (Kysely, Prisma, etc.), I want clean access to the raw driver instance so that I can compose db0 with any ORM",
+      "acceptanceCriteria": [
+        "getInstance() returns properly typed native driver",
+        "Documentation shows ORM composition patterns",
+        "No db0 lock-in for ORM layer"
+      ],
+      "priority": 2,
+      "passes": false,
+      "dependsOn": [
+        "US-003"
+      ],
+      "labels": [
+        "api",
+        "docs"
+      ]
+    },
+    {
+      "id": "US-006",
+      "title": "Create Drizzle postgresql integration",
+      "description": "Implement src/integrations/drizzle/postgresql.ts with proper dialect detection and type inference",
+      "acceptanceCriteria": [
+        "File exists at src/integrations/drizzle/postgresql.ts",
+        "Drizzle instance created with correct postgresql dialect",
+        "Types properly inferred"
+      ],
+      "priority": 1,
+      "passes": true,
+      "dependsOn": [
+        "US-001"
+      ],
+      "labels": [
+        "drizzle",
+        "postgresql"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-007",
+      "title": "Create Drizzle mysql integration",
+      "description": "Implement src/integrations/drizzle/mysql.ts with proper dialect detection and type inference",
+      "acceptanceCriteria": [
+        "File exists at src/integrations/drizzle/mysql.ts",
+        "Drizzle instance created with correct mysql dialect",
+        "Types properly inferred"
+      ],
+      "priority": 1,
+      "passes": true,
+      "dependsOn": [
+        "US-001"
+      ],
+      "labels": [
+        "drizzle",
+        "mysql"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-008",
+      "title": "Refactor existing Drizzle sqlite integration",
+      "description": "Update src/integrations/drizzle/sqlite.ts to follow new pattern for dialect detection",
+      "acceptanceCriteria": [
+        "Consistent with new postgresql/mysql integrations",
+        "Backward compatible",
+        "Improved type inference"
+      ],
+      "priority": 1,
+      "passes": false,
+      "dependsOn": [
+        "US-001"
+      ],
+      "labels": [
+        "drizzle",
+        "sqlite",
+        "refactor"
+      ]
+    },
+    {
+      "id": "US-009",
+      "title": "Update Drizzle index.ts for dialect detection",
+      "description": "Update src/integrations/drizzle/index.ts to auto-detect dialect and route to correct integration",
+      "acceptanceCriteria": [
+        "Auto-detects connector.dialect",
+        "Instantiates correct Drizzle dialect",
+        "Clean entry point API"
+      ],
+      "priority": 1,
+      "passes": false,
+      "dependsOn": [
+        "US-006",
+        "US-007",
+        "US-008"
+      ],
+      "labels": [
+        "drizzle",
+        "core"
+      ]
+    },
+    {
+      "id": "US-010",
+      "title": "Add eager option to better-sqlite3 connector",
+      "description": "Implement eager initialization for better-sqlite3 connector making getInstance() sync",
+      "acceptanceCriteria": [
+        "eager: true option supported",
+        "getInstance() returns sync when eager",
+        "Backward compatible"
+      ],
+      "priority": 2,
+      "passes": false,
+      "dependsOn": [
+        "US-002"
+      ],
+      "labels": [
+        "connectors",
+        "sqlite"
+      ]
+    },
+    {
+      "id": "US-011",
+      "title": "Add eager option to bun-sqlite connector",
+      "description": "Implement eager initialization for bun-sqlite connector making getInstance() sync",
+      "acceptanceCriteria": [
+        "eager: true option supported",
+        "getInstance() returns sync when eager",
+        "Backward compatible"
+      ],
+      "priority": 2,
+      "passes": false,
+      "dependsOn": [
+        "US-002"
+      ],
+      "labels": [
+        "connectors",
+        "sqlite"
+      ]
+    },
+    {
+      "id": "US-012",
+      "title": "Add eager option to cloudflare-d1 connector",
+      "description": "Implement eager initialization for cloudflare-d1 connector making getInstance() sync",
+      "acceptanceCriteria": [
+        "eager: true option supported",
+        "getInstance() returns sync when eager",
+        "Backward compatible"
+      ],
+      "priority": 2,
+      "passes": false,
+      "dependsOn": [
+        "US-002"
+      ],
+      "labels": [
+        "connectors",
+        "d1"
+      ]
+    },
+    {
+      "id": "US-013",
+      "title": "Normalize async connectors (libsql, postgresql, pglite, mysql2)",
+      "description": "Ensure all async connectors have consistent async behavior and error handling",
+      "acceptanceCriteria": [
+        "libsql, postgresql, pglite, mysql2 all normalized",
+        "Consistent Promise-wrapped getInstance()",
+        "Common error handling"
+      ],
+      "priority": 2,
+      "passes": false,
+      "dependsOn": [
+        "US-003"
+      ],
+      "labels": [
+        "connectors"
+      ]
+    },
+    {
+      "id": "US-014",
+      "title": "Create docker-compose.test.yml",
+      "description": "Create Docker Compose file with postgres:16 and mysql:8 services for testing",
+      "acceptanceCriteria": [
+        "File exists at docker-compose.test.yml",
+        "postgres:16 on port 5432",
+        "mysql:8 on port 3306"
+      ],
+      "priority": 3,
+      "passes": false,
+      "dependsOn": [
+        "US-004"
+      ],
+      "labels": [
+        "testing",
+        "docker"
+      ]
+    },
+    {
+      "id": "US-015",
+      "title": "Create integration tests for postgresql",
+      "description": "Write integration tests for postgresql connector with real database",
+      "acceptanceCriteria": [
+        "Tests cover basic CRUD",
+        "Tests cover transactions",
+        "Tests cover prepared statements",
+        "Tests cover postgresql-specific features"
+      ],
+      "priority": 3,
+      "passes": false,
+      "dependsOn": [
+        "US-014"
+      ],
+      "labels": [
+        "testing",
+        "postgresql"
+      ]
+    },
+    {
+      "id": "US-016",
+      "title": "Create integration tests for mysql",
+      "description": "Write integration tests for mysql connector with real database",
+      "acceptanceCriteria": [
+        "Tests cover basic CRUD",
+        "Tests cover transactions",
+        "Tests cover prepared statements",
+        "Tests cover mysql-specific features"
+      ],
+      "priority": 3,
+      "passes": false,
+      "dependsOn": [
+        "US-014"
+      ],
+      "labels": [
+        "testing",
+        "mysql"
+      ]
+    },
+    {
+      "id": "US-017",
+      "title": "Update CI to run Docker tests",
+      "description": "Configure CI pipeline to spin up Docker services and run integration tests",
+      "acceptanceCriteria": [
+        "CI workflow includes Docker setup",
+        "Tests run against real postgres and mysql",
+        "Tests pass in CI"
+      ],
+      "priority": 3,
+      "passes": false,
+      "dependsOn": [
+        "US-015",
+        "US-016"
+      ],
+      "labels": [
+        "ci",
+        "testing"
+      ]
+    }
+  ],
+  "metadata": {
+    "updatedAt": "2026-01-21T20:05:30.488Z"
+  }
+}
