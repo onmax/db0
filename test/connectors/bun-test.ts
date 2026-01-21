@@ -18,3 +18,30 @@ test("connectors: bun", async () => {
     { id: userId, firstName: "John", lastName: "Doe", email: "" },
   ]);
 });
+
+describe("eager initialization", () => {
+  test("getInstance returns sync after ready() with eager: true", async () => {
+    const db = createDatabase(connector({ name: ":memory:" }), { eager: true });
+    await db.ready();
+    const instance = db.getInstance();
+    expect(instance).not.toBeInstanceOf(Promise);
+    expect(instance).toBeDefined();
+    await db.dispose();
+  });
+
+  test("ready() resolves immediately for sync connector", async () => {
+    const db = createDatabase(connector({ name: ":memory:" }), { eager: true });
+    const start = Date.now();
+    await db.ready();
+    expect(Date.now() - start).toBeLessThan(50);
+    await db.dispose();
+  });
+
+  test("backward compatible - works without eager option", async () => {
+    const db = createDatabase(connector({ name: ":memory:" }));
+    const instance = db.getInstance();
+    expect(instance).toBeInstanceOf(Promise);
+    expect(await instance).toBeDefined();
+    await db.dispose();
+  });
+});
