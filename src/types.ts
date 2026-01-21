@@ -118,6 +118,19 @@ type DefaultSQLResult = {
   success?: boolean;
 };
 
+/**
+ * Options for creating a database instance.
+ */
+export type DatabaseOptions = {
+  /**
+   * When true, the connection is established immediately at creation time.
+   * Use `ready()` to wait for initialization to complete.
+   * After `ready()` resolves, `getInstance()` returns synchronously.
+   * @default false
+   */
+  eager?: boolean;
+};
+
 export interface Database<TConnector extends Connector = Connector>
   extends AsyncDisposable {
   readonly dialect: SQLDialect;
@@ -129,10 +142,21 @@ export interface Database<TConnector extends Connector = Connector>
   readonly disposed: boolean;
 
   /**
-   * The client instance used internally.
-   * @returns {Promise<TInstance>} A promise that resolves with the client instance.
+   * Returns a promise that resolves when the database is ready.
+   * When eager mode is enabled, this resolves once the connection is established.
+   * When eager mode is disabled, this resolves immediately.
+   * @returns {Promise<void>} A promise that resolves when the database is ready.
    */
-  getInstance: () => Promise<Awaited<ReturnType<TConnector["getInstance"]>>>;
+  ready: () => Promise<void>;
+
+  /**
+   * The client instance used internally.
+   * After `ready()` resolves (when eager mode is enabled), returns the instance synchronously.
+   * @returns {Promise<TInstance> | TInstance} The client instance or a promise that resolves with it.
+   */
+  getInstance: () =>
+    | Awaited<ReturnType<TConnector["getInstance"]>>
+    | Promise<Awaited<ReturnType<TConnector["getInstance"]>>>;
 
   /**
    * Executes a raw SQL string.

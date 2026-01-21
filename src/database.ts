@@ -1,5 +1,10 @@
 import { sqlTemplate } from "./template.ts";
-import type { Connector, Database, SQLDialect } from "./types.ts";
+import type {
+  Connector,
+  Database,
+  DatabaseOptions,
+  SQLDialect,
+} from "./types.ts";
 import type { Primitive } from "./types.ts";
 
 const SQL_SELECT_RE = /^select/i;
@@ -15,12 +20,19 @@ const DISPOSED_ERR =
  * and execute SQL queries with parameters using tagged template literals.
  *
  * @param {Connector} connector - The database connector used to execute and prepare SQL statements. See {@link Connector}.
+ * @param {DatabaseOptions} options - Optional configuration options.
  * @returns {Database} The database interface that allows SQL operations. See {@link Database}.
  */
 export function createDatabase<TConnector extends Connector = Connector>(
   connector: TConnector,
+  options?: DatabaseOptions,
 ): Database<TConnector> {
   let _disposed = false;
+  let _eagerInstance:
+    | Awaited<ReturnType<TConnector["getInstance"]>>
+    | undefined;
+  let _readyPromise: Promise<void> | undefined;
+
   const checkDisposed = () => {
     if (_disposed) {
       const err = new Error(DISPOSED_ERR);
@@ -28,6 +40,20 @@ export function createDatabase<TConnector extends Connector = Connector>(
       throw err;
     }
   };
+
+  if (options?.eager) {
+    const instance = connector.getInstance();
+    if (instance instanceof Promise) {
+      _readyPromise = instance.then((resolved) => {
+        _eagerInstance = resolved;
+      });
+    } else {
+      _eagerInstance = instance as Awaited<
+        ReturnType<TConnector["getInstance"]>
+      >;
+      _readyPromise = Promise.resolve();
+    }
+  }
 
   return <Database<TConnector>>{
     get dialect() {
@@ -38,9 +64,17 @@ export function createDatabase<TConnector extends Connector = Connector>(
       return _disposed;
     },
 
+    ready: () => {
+      checkDisposed();
+      return _readyPromise ?? Promise.resolve();
+    },
+
     getInstance() {
       checkDisposed();
-      return connector.getInstance();
+      if (_eagerInstance !== undefined) {
+        return _eagerInstance;
+      }
+      return Promise.resolve(connector.getInstance());
     },
 
     exec: (sql: string) => {
@@ -77,6 +111,8 @@ export function createDatabase<TConnector extends Connector = Connector>(
         return Promise.resolve();
       }
       _disposed = true;
+      _eagerInstance = undefined;
+      _readyPromise = undefined;
       try {
         return Promise.resolve(connector.dispose?.());
       } catch (error) {

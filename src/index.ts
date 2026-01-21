@@ -5,6 +5,7 @@ export { connectors } from "./_connectors.ts";
 export type {
   Connector,
   Database,
+  DatabaseOptions,
   ExecResult,
   Primitive,
   SQLDialect,
