@@ -1,7 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { Database, createDatabase } from "../../src";
-import { type DrizzleDatabase, drizzle } from "../../src/integrations/drizzle";
+import {
+  drizzle,
+  type DrizzleSQLiteDatabase,
+  type DrizzlePgDatabase,
+  type DrizzleMySqlDatabase,
+} from "../../src/integrations/drizzle";
 
 import * as dSqlite from "drizzle-orm/sqlite-core";
 import sqliteConnector from "../../src/connectors/better-sqlite3";
@@ -9,13 +14,16 @@ import sqliteConnector from "../../src/connectors/better-sqlite3";
 import * as dPg from "drizzle-orm/pg-core";
 import pgConnector from "../../src/connectors/postgresql";
 
+import * as dMySql from "drizzle-orm/mysql-core";
+import mysqlConnector from "../../src/connectors/mysql2";
+
 describe("integrations: drizzle: better-sqlite3", () => {
   const users = dSqlite.sqliteTable("users", {
     id: dSqlite.numeric("id"),
     name: dSqlite.text("name"),
   });
 
-  let drizzleDb: DrizzleDatabase;
+  let drizzleDb: DrizzleSQLiteDatabase;
   let db: Database;
 
   beforeAll(async () => {
@@ -65,7 +73,7 @@ describe("integrations: drizzle: with schema parameter", () => {
 
   const schema = { users };
 
-  let drizzleDb: DrizzleDatabase<typeof schema>;
+  let drizzleDb: DrizzleSQLiteDatabase<typeof schema>;
   let db: Database;
 
   beforeAll(async () => {
@@ -110,11 +118,11 @@ describe.runIf(process.env.POSTGRESQL_URL)(
   "integrations: drizzle: postgres",
   () => {
     const users = dPg.pgTable("users", {
-      id: dPg.numeric("id"),
+      id: dPg.integer("id").primaryKey(),
       name: dPg.text("name"),
     });
 
-    let drizzleDb: DrizzleDatabase;
+    let drizzleDb: DrizzlePgDatabase;
     let db: Database<ReturnType<typeof pgConnector>>;
 
     beforeAll(async () => {
@@ -133,7 +141,7 @@ describe.runIf(process.env.POSTGRESQL_URL)(
       const res = await drizzleDb
         .insert(users)
         .values({
-          id: "1",
+          id: 1,
           name: "John Doe",
         })
         .returning();
@@ -143,7 +151,7 @@ describe.runIf(process.env.POSTGRESQL_URL)(
     });
 
     it("select", async () => {
-      const res = await drizzleDb.select().from(users).all();
+      const res = await drizzleDb.select().from(users);
 
       expect(res.length).toBe(1);
       expect(res[0].name).toBe("John Doe");
@@ -154,3 +162,47 @@ describe.runIf(process.env.POSTGRESQL_URL)(
     });
   },
 );
+
+describe.runIf(process.env.MYSQL_URL)("integrations: drizzle: mysql", () => {
+  const users = dMySql.mysqlTable("users", {
+    id: dMySql.int("id").primaryKey(),
+    name: dMySql.text("name"),
+  });
+
+  let drizzleDb: DrizzleMySqlDatabase;
+  let db: Database<ReturnType<typeof mysqlConnector>>;
+
+  beforeAll(async () => {
+    db = createDatabase(
+      mysqlConnector({
+        url: process.env.MYSQL_URL as string,
+      }),
+    );
+
+    drizzleDb = drizzle(db);
+    await db.sql`DROP TABLE IF EXISTS users`;
+    await db.sql`CREATE TABLE users (id INT PRIMARY KEY, name TEXT)`;
+  });
+
+  it("insert", async () => {
+    await drizzleDb.insert(users).values({
+      id: 1,
+      name: "John Doe",
+    });
+
+    const res = await drizzleDb.select().from(users);
+    expect(res.length).toBe(1);
+    expect(res[0].name).toBe("John Doe");
+  });
+
+  it("select", async () => {
+    const res = await drizzleDb.select().from(users);
+
+    expect(res.length).toBe(1);
+    expect(res[0].name).toBe("John Doe");
+  });
+
+  afterAll(async () => {
+    await db.sql`DROP TABLE IF EXISTS users`;
+  });
+});

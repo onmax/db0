@@ -3,44 +3,37 @@ import {
   type RelationalSchemaConfig,
   type Query,
   type TablesRelationalConfig,
-  entityKind,
   NoopLogger,
 } from "drizzle-orm";
-
 import {
   SQLiteAsyncDialect,
   SQLiteSession,
   SQLitePreparedQuery,
 } from "drizzle-orm/sqlite-core";
-
 import type {
   PreparedQueryConfig,
   SelectedFieldsOrdered,
   SQLiteExecuteMethod,
   SQLiteTransactionConfig,
 } from "drizzle-orm/sqlite-core";
-
 import type { Database, Statement } from "db0";
 
-// Used as reference: https://github.com/drizzle-team/drizzle-orm/blob/main/drizzle-orm/src/d1/session.ts
-
-export interface DB0SessionOptions {
+export interface DB0SQLiteSessionOptions {
   logger?: Logger;
 }
 
-export class DB0Session<
+export class DB0SQLiteSession<
   TFullSchema extends Record<string, unknown>,
   TSchema extends TablesRelationalConfig,
 > extends SQLiteSession<"async", unknown, TFullSchema, TSchema> {
   dialect!: SQLiteAsyncDialect;
-
   private logger: Logger;
 
   constructor(
     private db: Database,
     dialect: SQLiteAsyncDialect,
     private schema: RelationalSchemaConfig<TSchema> | undefined,
-    private options: DB0SessionOptions = {},
+    private options: DB0SQLiteSessionOptions = {},
   ) {
     super(dialect);
     this.logger = options.logger ?? new NoopLogger();
@@ -52,9 +45,9 @@ export class DB0Session<
     fields: SelectedFieldsOrdered | undefined,
     executeMethod: SQLiteExecuteMethod,
     customResultMapper?: (rows: unknown[][]) => unknown,
-  ): DB0PreparedQuery {
+  ): DB0SQLitePreparedQuery {
     const stmt = this.db.prepare(query.sql);
-    return new DB0PreparedQuery(
+    return new DB0SQLitePreparedQuery(
       stmt,
       query,
       this.logger,
@@ -64,28 +57,15 @@ export class DB0Session<
     );
   }
 
-  // TODO: Implement batch
-
-  // TODO: Implement transaction
   override transaction<T>(
     transaction: (tx: any) => T | Promise<T>,
     config?: SQLiteTransactionConfig,
   ): Promise<T> {
     throw new Error("transaction is not implemented!");
-    //   const tx = new D1Transaction('async', this.dialect, this, this.schema);
-    //   await this.run(sql.raw(`begin${config?.behavior ? ' ' + config.behavior : ''}`));
-    //   try {
-    //     const result = await transaction(tx);
-    //     await this.run(sql`commit`);
-    //     return result;
-    //   } catch (err) {
-    //     await this.run(sql`rollback`);
-    //     throw err;
-    //   }
   }
 }
 
-export class DB0PreparedQuery<
+export class DB0SQLitePreparedQuery<
   T extends PreparedQueryConfig = PreparedQueryConfig,
 > extends SQLitePreparedQuery<{
   type: "async";
@@ -122,9 +102,3 @@ export class DB0PreparedQuery<
     return Promise.reject(new Error("values is not implemented!"));
   }
 }
-
-// Object.defineProperty(DB0PreparedQuery, entityKind, {
-//   value: "DB0PreparedQuery",
-//   enumerable: true,
-//   configurable: true,
-// });
