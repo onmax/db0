@@ -31,12 +31,13 @@
         "Backward compatible: default behavior unchanged"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "dependsOn": [],
       "labels": [
         "api",
         "core"
-      ]
+      ],
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-003",
@@ -48,12 +49,13 @@
         "Common error handling patterns"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "dependsOn": [],
       "labels": [
         "connectors",
         "api"
-      ]
+      ],
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-004",
@@ -82,14 +84,15 @@
         "No db0 lock-in for ORM layer"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "dependsOn": [
         "US-003"
       ],
       "labels": [
         "api",
         "docs"
-      ]
+      ],
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-006",
@@ -141,7 +144,7 @@
         "Improved type inference"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "dependsOn": [
         "US-001"
       ],
@@ -149,7 +152,8 @@
         "drizzle",
         "sqlite",
         "refactor"
-      ]
+      ],
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-009",
@@ -161,7 +165,7 @@
         "Clean entry point API"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "dependsOn": [
         "US-006",
         "US-007",
@@ -170,7 +174,8 @@
       "labels": [
         "drizzle",
         "core"
-      ]
+      ],
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-010",
@@ -328,6 +333,6 @@
     }
   ],
   "metadata": {
-    "updatedAt": "2026-01-21T20:05:30.488Z"
+    "updatedAt": "2026-01-21T20:18:45.112Z"
   }
 }
