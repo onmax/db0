@@ -20,11 +20,10 @@ export default function pgliteConnector<TOptions extends ConnectorOptions>(
   type PGLiteInstance = PGlite &
     PGliteInterfaceExtensions<TOptions["extensions"]>;
 
-  let _client: undefined | PGLiteInstance | Promise<PGLiteInstance>;
+  let _client: PGLiteInstance | Promise<PGLiteInstance> | undefined;
 
-  function getClient() {
-    return (_client ||= PGlite.create(opts).then((res) => (_client = res)));
-  }
+  const getClient = () =>
+    (_client ||= PGlite.create(opts).then((res) => (_client = res)));
 
   const query: InternalQuery = async (sql, params) => {
     const client = await getClient();

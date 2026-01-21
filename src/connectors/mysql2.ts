@@ -12,23 +12,20 @@ type InternalQuery = (
 export default function mysqlConnector(
   opts: ConnectorOptions,
 ): Connector<mysql.Connection> {
-  let _connection: mysql.Connection | undefined;
-  const getConnection = async () => {
-    if (_connection) {
-      return _connection;
-    }
+  let _connection: mysql.Connection | Promise<mysql.Connection> | undefined;
 
-    _connection = await mysql.createConnection({
-      ...opts,
-    });
-
-    return _connection;
+  const getConnection = () => {
+    if (_connection) return _connection;
+    return (_connection = mysql
+      .createConnection(opts)
+      .then((conn) => (_connection = conn)));
   };
 
-  const query: InternalQuery = (sql, params) =>
-    getConnection()
-      .then((c) => c.query(sql, params))
-      .then((res) => res[0]);
+  const query: InternalQuery = async (sql, params) => {
+    const connection = await getConnection();
+    const res = await connection.query(sql, params);
+    return res[0];
+  };
 
   return {
     name: "mysql",
@@ -37,7 +34,7 @@ export default function mysqlConnector(
     exec: (sql) => query(sql),
     prepare: (sql) => new StatementWrapper(sql, query),
     dispose: async () => {
-      await _connection?.end?.();
+      await (await _connection)?.end?.();
       _connection = undefined;
     },
   };

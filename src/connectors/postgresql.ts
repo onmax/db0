@@ -14,18 +14,13 @@ type InternalQuery = (
 export default function postgresqlConnector(
   opts: ConnectorOptions,
 ): Connector<pg.Client> {
-  let _client: undefined | pg.Client | Promise<pg.Client>;
-  function getClient() {
-    if (_client) {
-      return _client;
-    }
+  let _client: pg.Client | Promise<pg.Client> | undefined;
+
+  const getClient = () => {
+    if (_client) return _client;
     const client = new pg.Client("url" in opts ? opts.url : opts);
-    _client = client.connect().then(() => {
-      _client = client;
-      return _client;
-    });
-    return _client;
-  }
+    return (_client = client.connect().then(() => (_client = client)));
+  };
 
   const query: InternalQuery = async (sql, params) => {
     const client = await getClient();
