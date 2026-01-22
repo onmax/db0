@@ -5,6 +5,7 @@ import {
   type TablesRelationalConfig,
   NoopLogger,
 } from "drizzle-orm";
+import * as drizzleUtils from "drizzle-orm/utils";
 import {
   PgDialect,
   PgSession,
@@ -17,6 +18,17 @@ import type {
   SelectedFieldsOrdered,
 } from "drizzle-orm/pg-core";
 import type { Database, Statement } from "db0";
+
+// Type for mapResultRow which is exported at runtime but not in d.ts
+const mapResultRow = (
+  drizzleUtils as unknown as {
+    mapResultRow: (
+      columns: SelectedFieldsOrdered,
+      row: unknown[],
+      joinsNotNullableMap?: Record<string, boolean>,
+    ) => Record<string, unknown>;
+  }
+).mapResultRow;
 
 export interface DB0PgSessionOptions {
   logger?: Logger;
@@ -86,6 +98,9 @@ export class DB0PgPreparedQuery<
     values: unknown;
   },
 > extends PgPreparedQuery<T> {
+  // joinsNotNullableMap is inherited from PgPreparedQuery (defined at runtime)
+  declare joinsNotNullableMap: Record<string, boolean> | undefined;
+
   constructor(
     private stmt: Statement,
     query: Query,
@@ -106,13 +121,29 @@ export class DB0PgPreparedQuery<
     const params = this.query.params as any[];
     this.logger.logQuery(this.query.sql, params);
     const result = await this.stmt.all(...params);
-    if (this.customResultMapper) {
-      return this.customResultMapper(result as unknown[][]);
+    if (!this.fields && !this.customResultMapper) {
+      return result as T["execute"];
     }
-    return result as T["execute"];
+    const rows = this.toArrayRows(result as Record<string, unknown>[]);
+    if (this.customResultMapper) {
+      return this.customResultMapper(rows);
+    }
+    return rows.map((row) =>
+      mapResultRow(this.fields!, row, this.joinsNotNullableMap),
+    ) as T["execute"];
   }
 
   override mapResult(response: unknown, _isFromBatch?: boolean): unknown {
     return response;
+  }
+
+  private toArrayRows(rows: Record<string, unknown>[]): unknown[][] {
+    return rows.map((row) => this.toArrayRow(row));
+  }
+
+  private toArrayRow(row: Record<string, unknown>): unknown[] {
+    // Drizzle uses positional mapping (array indices), not key-based mapping.
+    // Object.values() preserves insertion order which matches SELECT column order.
+    return Object.values(row);
   }
 }

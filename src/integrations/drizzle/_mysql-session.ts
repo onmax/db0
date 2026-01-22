@@ -5,6 +5,7 @@ import {
   type TablesRelationalConfig,
   NoopLogger,
 } from "drizzle-orm";
+import * as drizzleUtils from "drizzle-orm/utils";
 import {
   MySqlDialect,
   MySqlSession,
@@ -19,6 +20,17 @@ import type {
   SelectedFieldsOrdered,
 } from "drizzle-orm/mysql-core";
 import type { Database, Statement } from "db0";
+
+// Type for mapResultRow which is exported at runtime but not in d.ts
+const mapResultRow = (
+  drizzleUtils as unknown as {
+    mapResultRow: (
+      columns: SelectedFieldsOrdered,
+      row: unknown[],
+      joinsNotNullableMap?: Record<string, boolean>,
+    ) => Record<string, unknown>;
+  }
+).mapResultRow;
 
 export interface DB0MySqlSessionOptions {
   logger?: Logger;
@@ -95,6 +107,9 @@ export class DB0MySqlSession<
 export class DB0MySqlPreparedQuery<
   T extends MySqlPreparedQueryConfig = MySqlPreparedQueryConfig,
 > extends MySqlPreparedQuery<T> {
+  // joinsNotNullableMap is inherited from MySqlPreparedQuery (defined at runtime)
+  declare joinsNotNullableMap: Record<string, boolean> | undefined;
+
   constructor(
     private stmt: Statement,
     private query: Query,
@@ -111,10 +126,16 @@ export class DB0MySqlPreparedQuery<
     const params = this.query.params as any[];
     this.logger.logQuery(this.query.sql, params);
     const result = await this.stmt.all(...params);
-    if (this.customResultMapper) {
-      return this.customResultMapper(result as unknown[][]);
+    if (!this.fields && !this.customResultMapper) {
+      return result as T["execute"];
     }
-    return result as T["execute"];
+    const rows = this.toArrayRows(result as Record<string, unknown>[]);
+    if (this.customResultMapper) {
+      return this.customResultMapper(rows);
+    }
+    return rows.map((row) =>
+      mapResultRow(this.fields!, row, this.joinsNotNullableMap),
+    ) as T["execute"];
   }
 
   // eslint-disable-next-line require-yield
@@ -122,5 +143,15 @@ export class DB0MySqlPreparedQuery<
     _placeholderValues?: Record<string, unknown>,
   ): AsyncGenerator<T["iterator"]> {
     throw new Error("iterator is not implemented!");
+  }
+
+  private toArrayRows(rows: Record<string, unknown>[]): unknown[][] {
+    return rows.map((row) => this.toArrayRow(row));
+  }
+
+  private toArrayRow(row: Record<string, unknown>): unknown[] {
+    // Drizzle uses positional mapping (array indices), not key-based mapping.
+    // Object.values() preserves insertion order which matches SELECT column order.
+    return Object.values(row);
   }
 }

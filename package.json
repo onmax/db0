@@ -11,6 +11,14 @@
       "types": "./dist/index.d.mts",
       "default": "./dist/index.mjs"
     },
+    "./tracing": {
+      "types": "./dist/tracing.d.mts",
+      "default": "./dist/tracing.mjs"
+    },
+    "./server": {
+      "types": "./dist/server.d.mts",
+      "default": "./dist/server.mjs"
+    },
     "./connectors/*": {
       "types": "./dist/connectors/*.d.ts",
       "default": "./dist/connectors/*.mjs"
@@ -22,6 +30,14 @@
     "./connectors/libsql/*": {
       "types": "./dist/connectors/libsql/*.d.ts",
       "default": "./dist/connectors/libsql/*.mjs"
+    },
+    "./connectors/postgresql/*": {
+      "types": "./dist/connectors/postgresql/*.d.ts",
+      "default": "./dist/connectors/postgresql/*.mjs"
+    },
+    "./connectors/mysql/*": {
+      "types": "./dist/connectors/mysql/*.d.ts",
+      "default": "./dist/connectors/mysql/*.mjs"
     }
   },
   "types": "./dist/index.d.mts",
@@ -39,16 +55,27 @@
     "release": "pnpm test && changelogen --release --push && pnpm publish",
     "test": "pnpm lint && pnpm test:types && vitest run --coverage && pnpm test:bun",
     "test:bun": "bun test ./test/connectors/bun-test.ts",
-    "test:types": "tsc --noEmit"
+    "test:types": "tsc --noEmit",
+    "test:docker": "./scripts/test-connectors.sh",
+    "test:docker:quick": "./scripts/test-connectors.sh quick",
+    "test:docker:pg": "./scripts/test-connectors.sh postgresql",
+    "test:docker:mysql": "./scripts/test-connectors.sh mysql",
+    "test:docker:bun": "./scripts/test-connectors.sh bun",
+    "test:mobile": "vitest run test/connectors/capacitor-sqlite.test.ts test/connectors/cordova-sqlite.test.ts",
+    "prisma:test:generate": "prisma generate --schema=test/fixtures/prisma/schema-sqlite.prisma && prisma generate --schema=test/fixtures/prisma/schema-postgresql.prisma && prisma generate --schema=test/fixtures/prisma/schema-mysql.prisma",
+    "docker:up": "docker compose -f docker-compose.test.yml up -d",
+    "docker:down": "docker compose -f docker-compose.test.yml down"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20251120.0",
     "@electric-sql/pglite": "^0.3.14",
     "@libsql/client": "^0.15.15",
+    "@neondatabase/serverless": "^1.0.2",
     "@planetscale/database": "^1.19.0",
     "@types/better-sqlite3": "^7.6.13",
     "@types/bun": "^1.3.2",
-    "@types/pg": "^8.15.6",
+    "@types/mssql": "^9.1.9",
+    "@types/pg": "^8.11.0",
     "@vitest/coverage-v8": "^4.0.12",
     "automd": "^0.4.2",
     "better-sqlite3": "^12.4.1",
@@ -56,46 +83,63 @@
     "db0": "link:.",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.7",
+    "kysely": "^0.27.6",
     "eslint": "^9.39.1",
     "eslint-config-unjs": "^0.5.0",
     "jiti": "^2.6.1",
+    "mariadb": "^3.4.0",
     "mlly": "^1.8.0",
+    "mssql": "^11.0.1",
     "mysql2": "^3.15.3",
     "obuild": "^0.4.2",
-    "pg": "^8.16.3",
+    "pg": "^8.13.0",
+    "prisma": "^6.10.0",
+    "@prisma/client": "^6.10.0",
+    "postgres": "^3.4.7",
     "prettier": "^3.6.2",
     "scule": "^1.3.0",
+    "typeorm": "^0.3.25",
     "typescript": "^5.9.3",
     "vitest": "^4.0.12",
     "wrangler": "^4.49.1"
   },
   "peerDependencies": {
+    "@capacitor-community/sqlite": "*",
     "@electric-sql/pglite": "*",
     "@libsql/client": "*",
+    "@neondatabase/serverless": "*",
+    "@planetscale/database": "*",
+    "@prisma/client": "*",
     "better-sqlite3": "*",
+    "cordova-sqlite-storage": "*",
     "drizzle-orm": "*",
+    "kysely": "*",
+    "mariadb": "*",
+    "mssql": "*",
     "mysql2": "*",
-    "sqlite3": "*"
+    "pg": "*",
+    "postgres": "*",
+    "sqlite3": "*",
+    "typeorm": "*"
   },
   "peerDependenciesMeta": {
-    "@libsql/client": {
-      "optional": true
-    },
-    "better-sqlite3": {
-      "optional": true
-    },
-    "drizzle-orm": {
-      "optional": true
-    },
-    "mysql2": {
-      "optional": true
-    },
-    "@electric-sql/pglite": {
-      "optional": true
-    },
-    "sqlite3": {
-      "optional": true
-    }
+    "@capacitor-community/sqlite": { "optional": true },
+    "@electric-sql/pglite": { "optional": true },
+    "@libsql/client": { "optional": true },
+    "@neondatabase/serverless": { "optional": true },
+    "@planetscale/database": { "optional": true },
+    "@prisma/client": { "optional": true },
+    "better-sqlite3": { "optional": true },
+    "cordova-sqlite-storage": { "optional": true },
+    "drizzle-orm": { "optional": true },
+    "kysely": { "optional": true },
+    "mariadb": { "optional": true },
+    "mssql": { "optional": true },
+    "mysql2": { "optional": true },
+    "pg": { "optional": true },
+    "postgres": { "optional": true },
+    "sqlite3": { "optional": true },
+    "typeorm": { "optional": true }
   },
   "packageManager": "pnpm@10.23.0",
   "pnpm": {

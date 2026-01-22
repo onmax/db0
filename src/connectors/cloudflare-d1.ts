@@ -28,6 +28,15 @@ export default function cloudflareD1Connector(
   return {
     name: "cloudflare-d1",
     dialect: "sqlite",
+    capabilities: {
+      supportsJSON: true,
+      supportsBooleans: false,
+      supportsArrays: false,
+      supportsDates: false,
+      supportsUUIDs: false,
+      supportsTransactions: false,
+      supportsBatch: true,
+    },
     getInstance: () => getDB(),
     exec: (sql) => getDB().exec(sql),
     prepare: (sql) => new StatementWrapper(getDB().prepare(sql)),

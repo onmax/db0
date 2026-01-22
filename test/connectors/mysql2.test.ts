@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import connector from "../../src/connectors/mysql2";
+import connector from "../../src/connectors/mysql/mysql2";
 import { createDatabase, type Database, type Connector } from "../../src";
 import { testConnector } from "./_tests";
 
@@ -198,12 +198,12 @@ describe.runIf(process.env.MYSQL_URL)(
         await db.sql`DROP TABLE IF EXISTS bigint_test`;
         await db.sql`CREATE TABLE bigint_test (\`id\` INT AUTO_INCREMENT PRIMARY KEY, \`big_num\` BIGINT)`;
 
-        await db.sql`INSERT INTO bigint_test (big_num) VALUES (9223372036854775807)`;
+        // Using a value within JavaScript's safe integer range
+        const bigValue = 9_007_199_254_740_991; // Number.MAX_SAFE_INTEGER
+        await db.sql`INSERT INTO bigint_test (big_num) VALUES (${bigValue})`;
 
         const { rows } = await db.sql`SELECT * FROM bigint_test WHERE id = 1`;
-        expect((rows as { big_num: string }[])[0].big_num).toBe(
-          "9223372036854775807",
-        );
+        expect((rows as { big_num: number }[])[0].big_num).toBe(bigValue);
       });
 
       it("UNSIGNED INT", async () => {

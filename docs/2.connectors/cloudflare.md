@@ -42,6 +42,38 @@ Assigned binding name.
 
 ---
 
+## Cloudflare D1 HTTP
+
+Access D1 from outside Workers using Cloudflare's REST API.
+
+:read-more{to="https://developers.cloudflare.com/api/resources/d1/subresources/database/methods/query/"}
+
+### Usage
+
+```ts
+import { createDatabase } from "db0";
+import d1Http from "db0/connectors/cloudflare-d1-http";
+
+const db = createDatabase(d1Http({
+  accountId: process.env.CF_ACCOUNT_ID,
+  databaseId: process.env.D1_DATABASE_ID,
+  apiToken: process.env.CF_API_TOKEN
+}));
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `accountId` | Cloudflare account ID |
+| `databaseId` | D1 database ID |
+| `apiToken` | API token with D1 permissions |
+
+> [!NOTE]
+> Transactions not supported via HTTP API.
+
+---
+
 ## Hyperdrive PostgreSQL
 
 :read-more{to="https://developers.cloudflare.com/hyperdrive"}

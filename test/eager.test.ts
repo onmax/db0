@@ -7,6 +7,15 @@ function createSyncConnector(): Connector<{ value: string }> {
   return {
     name: "sync-test",
     dialect: "sqlite",
+    capabilities: {
+      supportsBooleans: false,
+      supportsDates: false,
+      supportsJSON: false,
+      supportsArrays: false,
+      supportsUUIDs: false,
+      supportsTransactions: true,
+      supportsBatch: false,
+    },
     getInstance: () => {
       if (!instance) instance = { value: "sync-instance" };
       return instance;
@@ -31,6 +40,15 @@ function createAsyncConnector(): Connector<{ value: string }> {
   return {
     name: "async-test",
     dialect: "postgresql",
+    capabilities: {
+      supportsBooleans: true,
+      supportsDates: true,
+      supportsJSON: true,
+      supportsArrays: true,
+      supportsUUIDs: true,
+      supportsTransactions: true,
+      supportsBatch: true,
+    },
     getInstance: () => {
       if (instance) return instance;
       if (!connectionPromise) {

@@ -1,7 +1,12 @@
 import { resolve, dirname } from "node:path";
 import { mkdirSync } from "node:fs";
 import Database from "better-sqlite3";
-import type { Connector, Primitive } from "db0";
+import type {
+  Connector,
+  ConnectorTransaction,
+  Primitive,
+  TransactionOptions,
+} from "db0";
 import type { Statement as RawStatement } from "better-sqlite3";
 import { BoundableStatement } from "./_internal/statement.ts";
 
@@ -35,12 +40,38 @@ export default function sqliteConnector(
   return {
     name: "sqlite",
     dialect: "sqlite",
+    capabilities: {
+      supportsJSON: true,
+      supportsBooleans: false,
+      supportsArrays: false,
+      supportsDates: false,
+      supportsUUIDs: false,
+      supportsTransactions: true,
+      supportsBatch: true,
+    },
     getInstance: () => getDB(),
     exec: (sql) => getDB().exec(sql),
     prepare: (sql) => new StatementWrapper(() => getDB().prepare(sql)),
     dispose: () => {
       _db?.close?.();
       _db = undefined as any;
+    },
+    beginTransaction: async (
+      _opts?: TransactionOptions,
+    ): Promise<ConnectorTransaction> => {
+      const db = getDB();
+      db.exec("BEGIN");
+
+      return {
+        exec: (sql) => db.exec(sql),
+        prepare: (sql) => new StatementWrapper(() => db.prepare(sql)),
+        commit: () => {
+          db.exec("COMMIT");
+        },
+        rollback: () => {
+          db.exec("ROLLBACK");
+        },
+      };
     },
   };
 }

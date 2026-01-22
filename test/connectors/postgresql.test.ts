@@ -1,12 +1,13 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import connector from "../../src/connectors/postgresql";
+import connector from "../../src/connectors/postgresql/postgres";
 import { createDatabase, type Database, type Connector } from "../../src";
 import { testConnector } from "./_tests";
 
 describe.runIf(process.env.POSTGRESQL_URL)(
   "connectors: postgresql.test",
   () => {
-    const pgConnector = connector({ url: process.env.POSTGRESQL_URL! });
+    // max: 1 ensures single connection for transaction support
+    const pgConnector = connector({ url: process.env.POSTGRESQL_URL!, max: 1 });
 
     testConnector({
       dialect: "postgresql",
@@ -33,7 +34,10 @@ describe.runIf(process.env.POSTGRESQL_URL)(
         await db.sql`INSERT INTO jsonb_test (data) VALUES (${JSON.stringify(jsonData)}::jsonb)`;
 
         const { rows } = await db.sql`SELECT * FROM jsonb_test WHERE id = 1`;
-        expect((rows as { data: typeof jsonData }[])[0].data).toEqual(jsonData);
+        // postgres.js may return JSONB as string or object depending on version/config
+        const data = (rows as { data: typeof jsonData | string }[])[0].data;
+        const parsed = typeof data === "string" ? JSON.parse(data) : data;
+        expect(parsed).toEqual(jsonData);
       });
 
       it("JSONB operators", async () => {
