@@ -17,6 +17,7 @@
     "noImplicitOverride": true,
     "noEmit": true,
     "paths": {
+      "db0": ["./src/index.ts"],
       "db0/connectors/*": ["./src/connectors/*"]
     }
   },

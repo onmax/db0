@@ -16,6 +16,14 @@ const aliases = {
   "node-sqlite": ["sqlite"],
   "bun-sqlite": ["bun"],
   "libsql-node": ["libsql"],
+  "postgresql-postgres": ["postgresql"],
+  "postgresql-pg": ["pg"],
+  "postgresql-neon-http": ["neon-http"],
+  "postgresql-neon-ws": ["neon"],
+  "postgresql-pglite": ["pglite"],
+  "mysql-mysql2": ["mysql2"],
+  "mysql-planetscale": ["planetscale"],
+  "mysql-mariadb": ["mariadb"],
 } as const;
 
 async function getConnectorFiles(dir: string): Promise<string[]> {
@@ -87,7 +95,7 @@ ${connectors
   .filter((d) => d.optionsTExport)
   .map(
     (d) =>
-      /* ts */ `import type { ${d.optionsTExport} as ${d.optionsTName} } from "${d.subpath}";`,
+      /* ts */ `import type { ${d.optionsTExport} as ${d.optionsTName} } from "./connectors/${d.subpath.replace("db0/connectors/", "")}.ts";`,
   )
   .join("\n")}
 

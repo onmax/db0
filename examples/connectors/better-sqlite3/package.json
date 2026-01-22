@@ -1,0 +1,1 @@
+{ "name": "db0-example-better-sqlite3", "private": true, "type": "module", "scripts": { "start": "tsx index.ts" }, "dependencies": { "db0": "latest", "better-sqlite3": "^11.0.0" }, "devDependencies": { "tsx": "^4.0.0", "@types/better-sqlite3": "^7.6.0" } }

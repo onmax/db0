@@ -1,0 +1,1 @@
+{ "name": "db0-example-prisma", "private": true, "type": "module", "scripts": { "start": "tsx index.ts", "prisma:generate": "prisma generate && prisma db push" }, "dependencies": { "db0": "latest", "@prisma/client": "^6.0.0" }, "devDependencies": { "tsx": "^4.0.0", "prisma": "^6.0.0" } }

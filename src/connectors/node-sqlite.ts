@@ -41,6 +41,15 @@ export default function nodeSqlite3Connector(
   return {
     name: "node-sqlite",
     dialect: "sqlite",
+    capabilities: {
+      supportsJSON: true,
+      supportsBooleans: false,
+      supportsArrays: false,
+      supportsDates: false,
+      supportsUUIDs: false,
+      supportsTransactions: true,
+      supportsBatch: true,
+    },
     getInstance: () => getDB(),
     exec(sql: string) {
       getDB().exec(sql);

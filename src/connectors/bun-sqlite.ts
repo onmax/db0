@@ -34,6 +34,15 @@ export default function bunSqliteConnector(
   return {
     name: "sqlite",
     dialect: "sqlite",
+    capabilities: {
+      supportsJSON: true,
+      supportsBooleans: false,
+      supportsArrays: false,
+      supportsDates: false,
+      supportsUUIDs: false,
+      supportsTransactions: true,
+      supportsBatch: true,
+    },
     getInstance: () => getDB(),
     exec: (sql) => getDB().exec(sql),
     prepare: (sql) => new StatementWrapper(getDB().prepare(sql)),

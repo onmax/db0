@@ -1,5 +1,5 @@
 import { describe } from "vitest";
-import connector from "../../src/connectors/planetscale";
+import connector from "../../src/connectors/mysql/planetscale";
 import { testConnector } from "./_tests";
 
 describe.runIf(

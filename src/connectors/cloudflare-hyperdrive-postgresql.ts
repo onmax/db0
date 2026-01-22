@@ -1,65 +1,53 @@
-import pg from "pg";
-
+import postgres, { type Sql, type Options } from "postgres";
 import type { Connector, Primitive } from "db0";
-
 import { BoundableStatement } from "./_internal/statement.ts";
 import { getHyperdrive } from "./_internal/cloudflare.ts";
+import { normalizeParams, pgCapabilities } from "./postgresql/_utils.ts";
 
-type OmitPgConfig = Omit<
-  pg.ClientConfig,
-  "user" | "database" | "password" | "port" | "host" | "connectionString"
+type OmitPostgresConfig = Omit<
+  Options<Record<string, never>>,
+  "user" | "database" | "password" | "port" | "host"
 >;
-export type ConnectorOptions = {
-  bindingName: string;
-} & OmitPgConfig;
+
+export type ConnectorOptions = { bindingName: string } & OmitPostgresConfig;
 
 type InternalQuery = (
   sql: string,
   params?: Primitive[],
-) => Promise<pg.QueryResult>;
+) => Promise<postgres.RowList<postgres.Row[]>>;
 
 export default function cloudflareHyperdrivePostgresqlConnector(
   opts: ConnectorOptions,
-): Connector<pg.Client> {
-  let _client: undefined | pg.Client | Promise<pg.Client>;
-  async function getClient() {
-    if (_client) {
-      return _client;
-    }
+): Connector<Sql> {
+  let _sql: Sql | undefined;
+
+  async function getSql() {
+    if (_sql) return _sql;
     const hyperdrive = await getHyperdrive(opts.bindingName);
-    const client = new pg.Client({
-      ...opts,
-      connectionString: hyperdrive.connectionString,
-    });
-    _client = client.connect().then(() => {
-      _client = client;
-      return _client;
-    });
-    return _client;
+    const { bindingName: _, ...postgresOpts } = opts;
+    _sql = postgres(hyperdrive.connectionString, postgresOpts);
+    return _sql;
   }
 
   const query: InternalQuery = async (sql, params) => {
-    const client = await getClient();
-    return client.query(normalizeParams(sql), params);
+    const client = await getSql();
+    return client.unsafe(normalizeParams(sql), params as any);
   };
 
   return {
     name: "cloudflare-hyperdrive-postgresql",
     dialect: "postgresql",
-    getInstance: () => getClient(),
+    capabilities: { ...pgCapabilities, supportsTransactions: false },
+    getInstance: () => getSql(),
     exec: (sql) => query(sql),
     prepare: (sql) => new StatementWrapper(sql, query),
     dispose: async () => {
-      await (await _client)?.end?.();
-      _client = undefined;
+      if (_sql) {
+        await _sql.end();
+        _sql = undefined;
+      }
     },
   };
-}
-
-// https://www.postgresql.org/docs/9.3/sql-prepare.html
-function normalizeParams(sql: string) {
-  let i = 0;
-  return sql.replace(/\?/g, () => `$${++i}`);
 }
 
 class StatementWrapper extends BoundableStatement<void> {
@@ -74,19 +62,20 @@ class StatementWrapper extends BoundableStatement<void> {
 
   async all(...params: Primitive[]) {
     const res = await this.#query(this.#sql, params);
-    return res.rows;
+    return [...res];
   }
 
   async run(...params: Primitive[]) {
     const res = await this.#query(this.#sql, params);
     return {
       success: true,
-      ...res,
+      rows: [...res],
+      count: res.count,
     };
   }
 
   async get(...params: Primitive[]) {
     const res = await this.#query(this.#sql, params);
-    return res.rows[0];
+    return res[0];
   }
 }

@@ -16,3 +16,8 @@ __*
 /integrations
 
 tsconfig.tsbuildinfo
+
+# Prisma generated test clients
+test/fixtures/prisma/client-*
+test/fixtures/prisma/*.db
+.vercel

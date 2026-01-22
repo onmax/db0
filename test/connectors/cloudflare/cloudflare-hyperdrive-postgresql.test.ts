@@ -23,10 +23,12 @@ describe.runIf(process.env.POSTGRESQL_URL)(
       await platformProxy?.dispose();
     });
 
+    // max: 1 ensures single connection for transaction support
     testConnector({
       dialect: "postgresql",
       connector: cloudflareHyperdrivePostgresql({
         bindingName: "POSTGRESQL",
+        max: 1,
       }),
     });
   },

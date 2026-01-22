@@ -2,6 +2,7 @@ import mysql from "mysql2/promise";
 import type { Connector, Primitive } from "db0";
 import { BoundableStatement } from "./_internal/statement.ts";
 import { getHyperdrive } from "./_internal/cloudflare.ts";
+import { mysqlCapabilities } from "./mysql/_utils.ts";
 
 type OmitMysqlConfig = Omit<
   mysql.ConnectionOptions,
@@ -21,9 +22,7 @@ type OmitMysqlConfig = Omit<
   | "disableEval"
 >;
 
-export type ConnectorOptions = {
-  bindingName: string;
-} & OmitMysqlConfig;
+export type ConnectorOptions = { bindingName: string } & OmitMysqlConfig;
 
 type InternalQuery = (
   sql: string,
@@ -36,10 +35,7 @@ export default function cloudflareHyperdriveMysqlConnector(
   let _connection: mysql.Connection | undefined;
 
   const getConnection = async () => {
-    if (_connection) {
-      return _connection;
-    }
-
+    if (_connection) return _connection;
     const hyperdrive = await getHyperdrive(opts.bindingName);
     _connection = await mysql.createConnection({
       ...opts,
@@ -48,12 +44,8 @@ export default function cloudflareHyperdriveMysqlConnector(
       password: hyperdrive.password,
       database: hyperdrive.database,
       port: hyperdrive.port,
-      // The following line is needed for mysql2 compatibility with Workers
-      // mysql2 uses eval() to optimize result parsing for rows with > 100 columns
-      // Configure mysql2 to use static parsing instead of eval() parsing with disableEval
       disableEval: true,
     });
-
     return _connection;
   };
 
@@ -65,6 +57,7 @@ export default function cloudflareHyperdriveMysqlConnector(
   return {
     name: "cloudflare-hyperdrive-mysql",
     dialect: "mysql",
+    capabilities: { ...mysqlCapabilities, supportsTransactions: false },
     getInstance: () => getConnection(),
     exec: (sql) => query(sql),
     prepare: (sql) => new StatementWrapper(sql, query),
