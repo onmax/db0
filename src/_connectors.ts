@@ -25,9 +25,10 @@ import type { ConnectorOptions as PostgreSQLPgOptions } from "./connectors/postg
 import type { ConnectorOptions as PostgreSQLPgliteOptions } from "./connectors/postgresql/pglite.ts";
 import type { ConnectorOptions as PostgreSQLPoolOptions } from "./connectors/postgresql/pool.ts";
 import type { ConnectorOptions as PostgreSQLPostgresOptions } from "./connectors/postgresql/postgres.ts";
+import type { ConnectorOptions as SequelizeOptions } from "./connectors/sequelize.ts";
 import type { ConnectorOptions as SQLite3Options } from "./connectors/sqlite3.ts";
 
-export type ConnectorName = "better-sqlite3" | "bun-sqlite" | "bun" | "capacitor-sqlite" | "cloudflare-d1" | "cloudflare-d1-http" | "cloudflare-hyperdrive-mysql" | "cloudflare-hyperdrive-postgresql" | "cordova-sqlite" | "http" | "libsql-core" | "libsql-http" | "libsql-node" | "libsql" | "libsql-web" | "mssql" | "mysql-mariadb" | "mariadb" | "mysql-mysql2" | "mysql2" | "mysql-planetscale" | "planetscale" | "mysql-pool" | "node-sqlite" | "sqlite" | "postgresql-neon-http" | "neon-http" | "postgresql-neon-ws" | "neon" | "postgresql-pg" | "pg" | "postgresql-pglite" | "pglite" | "postgresql-pool" | "postgresql-postgres" | "postgresql" | "sqlite3";
+export type ConnectorName = "better-sqlite3" | "bun-sqlite" | "bun" | "capacitor-sqlite" | "cloudflare-d1" | "cloudflare-d1-http" | "cloudflare-hyperdrive-mysql" | "cloudflare-hyperdrive-postgresql" | "cordova-sqlite" | "http" | "libsql-core" | "libsql-http" | "libsql-node" | "libsql" | "libsql-web" | "mssql" | "mysql-mariadb" | "mariadb" | "mysql-mysql2" | "mysql2" | "mysql-planetscale" | "planetscale" | "mysql-pool" | "node-sqlite" | "sqlite" | "postgresql-neon-http" | "neon-http" | "postgresql-neon-ws" | "neon" | "postgresql-pg" | "pg" | "postgresql-pglite" | "pglite" | "postgresql-pool" | "postgresql-postgres" | "postgresql" | "sequelize" | "sqlite3";
 
 export type ConnectorOptions = {
   "better-sqlite3": BetterSQLite3Options;
@@ -77,6 +78,7 @@ export type ConnectorOptions = {
   "postgresql-postgres": PostgreSQLPostgresOptions;
   /** alias of postgresql-postgres */
   "postgresql": PostgreSQLPostgresOptions;
+  "sequelize": SequelizeOptions;
   "sqlite3": SQLite3Options;
 };
 
@@ -128,5 +130,6 @@ export const connectors: Record<ConnectorName, string> = Object.freeze({
   "postgresql-postgres": "db0/connectors/postgresql/postgres",
   /** alias of postgresql-postgres */
   "postgresql": "db0/connectors/postgresql/postgres",
+  "sequelize": "db0/connectors/sequelize",
   "sqlite3": "db0/connectors/sqlite3",
 } as const);
